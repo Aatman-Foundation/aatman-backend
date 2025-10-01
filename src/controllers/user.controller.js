@@ -19,19 +19,19 @@ const genrateAccessAndRefreshToken = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-     
-    throw new ApiError(500,"Something went wrong while genrating access tokens and refresh tokens",error 
+    throw new ApiError(
+      500,
+      "Something went wrong while genrating access tokens and refresh tokens",
+      error,
     );
-   
-   
   }
 };
 
-const registerUser = asyncHandlers( async (req, res) => {
+const registerUser = asyncHandlers(async (req, res) => {
   const { fullname, email, password, phoneNumber } = req.body;
   // validation
 
-  if (!fullname, !email, !password, !phoneNumber) {
+  if ((!fullname, !email, !password, !phoneNumber)) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -63,7 +63,6 @@ const registerUser = asyncHandlers( async (req, res) => {
       .json(new ApiResponse(200, createdUser, "User registered successfully!"));
   } catch (error) {
     console.log("User creation failed", error);
-
   }
 });
 
@@ -116,7 +115,7 @@ const loginUser = asyncHandlers(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, loggedInUser, "User logged in successfully!"))
+    .json(new ApiResponse(200, loggedInUser, "User logged in successfully!"));
 });
 
 const logoutUser = asyncHandlers(async (req, res) => {
@@ -168,6 +167,7 @@ const refresAccessToken = asyncHandlers(async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 60 * 60 * 1000
     };
 
     const { accessToken, refreshToken: newRefreshToken } =
@@ -194,9 +194,7 @@ const refresAccessToken = asyncHandlers(async (req, res) => {
   }
 });
 
-
 const getUserProfileDetails = asyncHandlers(async (req, res) => {
-
   const currentUserId = req.user._id;
 
   if (!currentUserId) {
@@ -204,13 +202,13 @@ const getUserProfileDetails = asyncHandlers(async (req, res) => {
   }
 
   const user = await User.findById(currentUserId).select(
-    "-password -refreshToken"
+    "-password -refreshToken",
   );
 
   res.status(200).json(new ApiResponse(200, user, "Current user details"));
 });
 
-const updateProfilePicture = asyncHandlers (async (req, res)=>{
+const updateProfilePicture = asyncHandlers(async (req, res) => {
   const profilePictureLocalPath = req.files?.profilePicture?.[0]?.path;
   // console.log("this is file path", profilePictureLocalPath)
   if (!profilePictureLocalPath) {
@@ -230,20 +228,18 @@ const updateProfilePicture = asyncHandlers (async (req, res)=>{
         profilePictureUrl: avatar.url,
       },
     },
-    { new: true }
+    { new: true },
   ).select("-password -refreshToken");
 
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Avatar details updated sucessfully!"));
-})
-
+});
 
 const updateAccountDetails = asyncHandlers(async (req, res) => {
-  const { fullname, email, oldPassword, newPassword} = req.body;
+  const { fullname, email, oldPassword, newPassword } = req.body;
 
   const user = await User.findById(req.user._id);
-  
 
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -251,7 +247,7 @@ const updateAccountDetails = asyncHandlers(async (req, res) => {
 
   let detailsUpdated = false;
   let passwordUpdated = false;
-  let profilePictureUpdated = false
+  let profilePictureUpdated = false;
 
   if (typeof fullname === "string" && fullname.trim().length) {
     user.fullname = fullname.trim();
@@ -282,7 +278,9 @@ const updateAccountDetails = asyncHandlers(async (req, res) => {
     await user.save();
   }
 
-  const safeUser = await User.findById(user._id).select("-password -refreshToken");
+  const safeUser = await User.findById(user._id).select(
+    "-password -refreshToken",
+  );
 
   let message = "Account details updated successfully!";
   if (passwordUpdated && detailsUpdated) {
@@ -290,14 +288,9 @@ const updateAccountDetails = asyncHandlers(async (req, res) => {
   } else if (passwordUpdated) {
     message = "Password updated successfully!";
   }
-  
 
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, safeUser, message));
+  return res.status(200).json(new ApiResponse(200, safeUser, message));
 });
-
 
 export {
   registerUser,
@@ -306,5 +299,5 @@ export {
   logoutUser,
   getUserProfileDetails,
   updateAccountDetails,
-  updateProfilePicture
+  updateProfilePicture,
 };
