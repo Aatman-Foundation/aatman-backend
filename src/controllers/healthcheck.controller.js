@@ -1,8 +1,8 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
-import {asyncHandlers} from "../utils/asyncHandlers.js"
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 
-const healthcheck = asyncHandlers( async (req, res) => {
+const healthcheck = asyncHandler( async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "OK", "Health check passed"))
 })
 

@@ -24,7 +24,25 @@ const userSchema = Schema({
     },
     refreshToken: {
       type: String,
-    }
+    },
+    role : {
+      type : String,
+      default: "user"
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+    },
+    emailVerificationExpiry: {
+      type: Date,
+  },
+
+  registeredAs : {
+    type : String,
+  }
 
 }, {timestamps: true});
 
@@ -42,7 +60,8 @@ userSchema.methods.genrateAccessToken = function(){
    {
      _id: this._id,
      email: this.email,
-     fullname: this.fullname
+     fullname: this.fullname,
+     role : this.role
    },
    process.env.ACCESS_TOKEN_SECRET,
    {expiresIn: process.env.ACCESS_TOKEN_EXPIRY}

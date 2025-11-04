@@ -1,39 +1,15 @@
-import { asyncHandlers } from "../utils/asyncHandlers.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { generateAccessAndRefreshToken } from "../utils/tokenGenrator.js";
 import jwt from "jsonwebtoken";
 
-const genrateAccessAndRefreshToken = async (userId) => {
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new ApiError(404, "User does not exist");
-    }
-    const accessToken = user.genrateAccessToken();
-    const refreshToken = user.genrateRefreshToken();
 
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
 
-    return { accessToken, refreshToken };
-  } catch (error) {
-    throw new ApiError(
-      500,
-      "Something went wrong while genrating access tokens and refresh tokens",
-      error,
-    );
-  }
-};
-
-const registerUser = asyncHandlers(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
   const { fullname, email, password, phoneNumber } = req.body;
-  // validation
-
-  if ((!fullname, !email, !password, !phoneNumber)) {
-    throw new ApiError(400, "All fields are required");
-  }
 
   const exitedUser = await User.findOne({
     $or: [{ email }, { phoneNumber }],
@@ -60,23 +36,14 @@ const registerUser = asyncHandlers(async (req, res) => {
     }
     return res
       .status(201)
-      .json(new ApiResponse(200, createdUser, "User registered successfully!"));
+      .json(new ApiResponse(201, createdUser, "User registered successfully!"));
   } catch (error) {
     console.log("User creation failed", error);
   }
 });
 
-const loginUser = asyncHandlers(async (req, res) => {
-  // get data from body
-  const { phoneNumber, email, password } = req.body;
-
-  // console.log(password);
-
-  // validation
-  if (!(email || phoneNumber)) {
-    throw new ApiError(400, "Email or phone number is required");
-  }
-
+const loginUser = asyncHandler(async (req, res) => {
+  const { fullname, email, password, phoneNumber } = req.body;
   const user = await User.findOne({
     $or: [{ email }, { phoneNumber }],
   });
@@ -93,16 +60,18 @@ const loginUser = asyncHandlers(async (req, res) => {
 
   // console.log(user._id);
 
-  const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(
-    user._id,
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id, User
   );
+
+  console.log("Token from function", accessToken, refresAccessToken)
 
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken",
   );
 
   if (!loggedInUser) {
-    throw new ApiError(401, "Unable to login user");
+    throw new ApiError(500, "Unable to login user");
   }
 
   const options = {
@@ -118,7 +87,7 @@ const loginUser = asyncHandlers(async (req, res) => {
     .json(new ApiResponse(200, loggedInUser, "User logged in successfully!"));
 });
 
-const logoutUser = asyncHandlers(async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -140,12 +109,12 @@ const logoutUser = asyncHandlers(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
-const refresAccessToken = asyncHandlers(async (req, res) => {
+const refresAccessToken = asyncHandler(async (req, res) => {
   const inComingRefreshToken =
     req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!inComingRefreshToken) {
-    throw new ApiError(401, "Refresh token required");
+    throw new ApiError(400, "Refresh token required");
   }
 
   try {
@@ -171,7 +140,7 @@ const refresAccessToken = asyncHandlers(async (req, res) => {
     };
 
     const { accessToken, refreshToken: newRefreshToken } =
-      await genrateAccessAndRefreshToken(user._id);
+      await generateAccessAndRefreshToken(user._id, User);
 
     return res
       .status(200)
@@ -194,7 +163,7 @@ const refresAccessToken = asyncHandlers(async (req, res) => {
   }
 });
 
-const getUserProfileDetails = asyncHandlers(async (req, res) => {
+const getUserProfileDetails = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id;
 
   if (!currentUserId) {
@@ -208,7 +177,7 @@ const getUserProfileDetails = asyncHandlers(async (req, res) => {
   res.status(200).json(new ApiResponse(200, user, "Current user details"));
 });
 
-const updateProfilePicture = asyncHandlers(async (req, res) => {
+const updateProfilePicture = asyncHandler(async (req, res) => {
   const profilePictureLocalPath = req.files?.profilePicture?.[0]?.path;
   // console.log("this is file path", profilePictureLocalPath)
   if (!profilePictureLocalPath) {
@@ -236,7 +205,7 @@ const updateProfilePicture = asyncHandlers(async (req, res) => {
     .json(new ApiResponse(200, user, "Avatar details updated sucessfully!"));
 });
 
-const updateAccountDetails = asyncHandlers(async (req, res) => {
+const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullname, email, oldPassword, newPassword } = req.body;
 
   const user = await User.findById(req.user._id);
