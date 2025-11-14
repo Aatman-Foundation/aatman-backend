@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import { MedicalProfessional } from "../models/medicalProfessional.model.js";
 import { NonMedicalProfessional } from "../models/nonMedicalProfessional.model.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const registerAdmin = asyncHandler(async (req, res) => {
   const { fullname, email, password, phoneNumber } = req.body;
@@ -251,7 +252,11 @@ const getUserDetailsById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "User id not provided");
   }
 
-  const currentUser = await User.findById(userId);
+  const currentUser = await User.findById(userId).select("registeredAs");
+
+  if(!currentUser ){
+    throw new ApiError (404, "User does not exists or removed from database!")
+  }
 
   if (currentUser.registeredAs === "medical_prof") {
     const medicalProf = await MedicalProfessional.findOne({
@@ -270,6 +275,103 @@ const getUserDetailsById = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+const deleteUserById = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+
+
+  if (!id) throw new ApiError(400, "User id not provided");
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(400, "Invalid user id");
+
+  try {
+    const currentUser = await User.findById(id);
+    if (currentUser.registeredAs === "medical_prof") {
+      await MedicalProfessional.findOneAndDelete({ userId: id });
+    } else {
+      await NonMedicalProfessional.findOneAndDelete({ userId: id });
+    }
+  
+    const deletedUser = await User.findByIdAndDelete(id);
+  
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, {
+          deletedUserId: id,
+          deletedProfileType: currentUser.registeredAs,
+          user: deletedUser, 
+        }, "User removed successfully!")
+      );
+  } catch (error) {
+    throw new ApiError(404, "User does not exists!")
+  }
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullname, email, oldPassword, newPassword } = req.body;
+
+  const user = await Admin.findById(req.user._id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  let detailsUpdated = false;
+  let passwordUpdated = false;
+  let profilePictureUpdated = false;
+
+  if (typeof fullname === "string" && fullname.trim().length) {
+    user.fullname = fullname.trim();
+    detailsUpdated = true;
+  }
+
+  if (typeof email === "string" && email.trim().length) {
+    user.email = email.trim().toLowerCase();
+    detailsUpdated = true;
+  }
+
+  if (oldPassword || newPassword) {
+    if (!oldPassword || !newPassword) {
+      throw new ApiError(400, "Both old and new passwords are required");
+    }
+
+    const isOldPasswordValid = await user.isPasswordCorrect(oldPassword);
+
+    if (!isOldPasswordValid) {
+      throw new ApiError(401, "Old password is incorrect");
+    }
+
+    user.password = newPassword;
+    passwordUpdated = true;
+  }
+
+  if (detailsUpdated || passwordUpdated) {
+    await user.save();
+  }
+
+  const safeUser = await User.findById(user._id).select(
+    "-password -refreshToken",
+  );
+
+  let message = "Account details updated successfully!";
+  if (passwordUpdated && detailsUpdated) {
+    message = "Account details and password updated successfully!";
+  } else if (passwordUpdated) {
+    message = "Password updated successfully!";
+  }
+
+  return res.status(200).json(new ApiResponse(200, safeUser, message));
+});
+
+const getAllUsersDocuments = asyncHandler (async (req, res) => {
+  
+})
+
+const getUserDocumentsById = asyncHandler (async (req, res) => {
+
+});
+
 export {
   registerAdmin,
   adminLogin,
@@ -279,4 +381,6 @@ export {
   getUsersStats,
   getAllUsers,
   getUserDetailsById,
+  deleteUserById,
+  updateAccountDetails,
 };
