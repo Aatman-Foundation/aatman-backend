@@ -16,6 +16,8 @@ const registerMedicalProfessional = asyncHandler(async (req, res) => {
 
   const personalPhotoPath = req.file.path;
 
+  console.log(personalPhotoPath)
+
   try {
     if (!personalPhotoPath) {
       console.log("path is ", personalPhotoPath);
@@ -26,6 +28,7 @@ const registerMedicalProfessional = asyncHandler(async (req, res) => {
   }
 
   const uploadedPhoto = await uploadOnCloudinary(personalPhotoPath);
+
 
   if (!uploadedPhoto?.url) {
     throw new ApiError(400, "Failed to upload personal photo");

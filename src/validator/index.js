@@ -248,28 +248,25 @@ const medicalProfessionalRegistration = () => {
       .withMessage("Publication link must be a valid URL"),
 
     // Section 7 : Training & Capacity Building
-    body("traningDetails")
-      .isArray({ min: 1 })
-      .withMessage("At least one traning details entry is required!"),
-    body("traningDetails.*.traningName")
+    body("trainingDetails.*.trainingName")
       .trim()
       .notEmpty()
-      .withMessage("Traning name is required!"),
-    body("traningDetails.*.traningOrganizer")
+      .withMessage("Training name is required!"),
+    body("trainingDetails.*.trainingOrganizer")
       .trim()
       .notEmpty()
-      .withMessage("Traning organizer name is required!"),
-    body("traningDetails.*.traningRole").notEmpty()
+      .withMessage("Training organizer name is required!"),
+    body("trainingDetails.*.trainingRole").notEmpty()
       .withMessage("At least one training role is required!"),
-    body("traningDetails.*.traningStartDate")
+    body("trainingDetails.*.trainingStartDate")
       .trim()
       .notEmpty()
       .withMessage("Training start date is required!")
       .toDate(),
-    body("traningDetails.*.traningEndDate")
+    body("trainingDetails.*.trainingEndDate")
       .trim()
       .notEmpty()
-      .withMessage("Traning end date is required!")
+      .withMessage("Training end date is required!")
       .toDate(),
 
     // Section 8: Digital Presence
@@ -422,28 +419,25 @@ const nonMedicalProfessionalRegistration = () =>{
     body("academics_additionalCertifications").optional().trim(),
 
     // Section 7 : Training & Capacity Building
-    body("traningDetails")
-      .isArray({ min: 1 })
-      .withMessage("At least one traning details entry is required!"),
-    body("traningDetails.*.traningName")
+    body("trainingDetails.*.trainingName")
       .trim()
       .notEmpty()
-      .withMessage("Traning name is required!"),
-    body("traningDetails.*.traningOrganizer")
+      .withMessage("Training name is required!"),
+    body("trainingDetails.*.trainingOrganizer")
       .trim()
       .notEmpty()
-      .withMessage("Traning organizer name is required!"),
-    body("traningDetails.*.traningRole").notEmpty()
+      .withMessage("Training organizer name is required!"),
+    body("trainingDetails.*.trainingRole").notEmpty()
       .withMessage("At least one training role is required!"),
-    body("traningDetails.*.traningStartDate")
+    body("trainingDetails.*.trainingStartDate")
       .trim()
       .notEmpty()
       .withMessage("Training start date is required!")
       .toDate(),
-    body("traningDetails.*.traningEndDate")
+    body("trainingDetails.*.trainingEndDate")
       .trim()
       .notEmpty()
-      .withMessage("Traning end date is required!")
+      .withMessage("Training end date is required!")
       .toDate(),
 
     // Section 8: Digital Presence

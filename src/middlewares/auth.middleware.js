@@ -4,32 +4,32 @@ import { ApiError } from "../utils/ApiError.js";
 import { Admin } from "../models/admin.model.js";
 import { User } from "../models/user.model.js";
 
+
 const verifyAnyToken = (token) => {
   try {
     return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  } catch (err1) {
+  } 
+  catch (err1) {
     try {
       return jwt.verify(token, process.env.ADMIN_TOKEN_SECRET);
     } catch (err2) {
       throw new ApiError(401, "Invalid or expired token");
     }
+    
   }
+  
 };
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-  const token =
-    req.cookies?.accessToken ||
-    (authHeader && authHeader.startsWith("Bearer ")
-      ? authHeader.replace("Bearer ", "")
-      : null);
+  const authHeader = req.headers.authorization;
+  let bearerToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    bearerToken = authHeader.split(" ")[1];
+  }
+  const token = req.cookies?.accessToken || bearerToken;
 
   if (!token) {
     throw new ApiError(401, "Unauthorized, No token provided!");
-  }
-
-
-  if (!token) {
-    throw new ApiError(401, "Unauthorized: No token provided");
   }
 
   try {
