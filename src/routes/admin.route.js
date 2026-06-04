@@ -26,7 +26,7 @@ const router = Router();
 
 router.route("/register-admin").post(userRegisterValidator(), validate, registerAdmin);
 router.route("/admin-login").post(userLoginValidator(), validate, adminLogin);
-router.route("/admin-refresh").post(verifyJWT, requireRole(ROLES.ADMIN),refresAccessToken )
+router.route("/admin-refresh").post(refresAccessToken)
 router.route("/admin-logout").post(verifyJWT, requireRole(ROLES.ADMIN),adminLogout)
 router.route("/me").get(verifyJWT, requireRole(ROLES.ADMIN),getAdminDetails)
 router.route("/get-user-stats").get(verifyJWT, requireRole(ROLES.ADMIN),getUsersStats);
@@ -35,12 +35,12 @@ router.route("/get-user/:id").get(verifyJWT, requireRole(ROLES.ADMIN), getUserDe
 router.route("/delete-user/:id").post(verifyJWT, requireRole(ROLES.ADMIN), deleteUserById);
 router
   .route("/announcements")
-  .post(verifyJWT, requireRole(ROLES.ADMIN), createAnnouncement)
+  .post(verifyJWT, requireRole(ROLES.ADMIN), upload.single("image"), createAnnouncement)
   .get(verifyJWT, requireRole(ROLES.ADMIN), getAnnouncements);
 router
   .route("/announcements/:id")
   .get(verifyJWT, requireRole(ROLES.ADMIN), getAnnouncementById)
-  .patch(verifyJWT, requireRole(ROLES.ADMIN), updateAnnouncement)
+  .patch(verifyJWT, requireRole(ROLES.ADMIN), upload.single("image"), updateAnnouncement)
   .delete(verifyJWT, requireRole(ROLES.ADMIN), deleteAnnouncement);
 router
   .route("/gallery")

@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadToS3 } from "../utils/s3.js";
 import { generateAccessAndRefreshToken } from "../utils/tokenGenrator.js";
 import jwt from "jsonwebtoken";
 
@@ -19,27 +19,24 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with phone number or eamil already exists");
   }
 
-  try {
-    const user = await User.create({
-      fullname,
-      email,
-      phoneNumber,
-      password,
-    });
+  const user = await User.create({
+    fullname,
+    email,
+    phoneNumber,
+    password,
+  });
 
-    const createdUser = await User.findById(user._id).select(
-      "-password -refreshToken",
-    );
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken",
+  );
 
-    if (!createdUser) {
-      throw new ApiError(500, "Something went wrong while registering a user");
-    }
-    return res
-      .status(201)
-      .json(new ApiResponse(201, createdUser, "User registered successfully!"));
-  } catch (error) {
-    console.log("User creation failed", error);
+  if (!createdUser) {
+    throw new ApiError(500, "Something went wrong while registering a user");
   }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, createdUser, "User registered successfully!"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -64,7 +61,6 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id, User
   );
 
-  console.log("Token from function", accessToken, refresAccessToken)
 
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken",
@@ -184,7 +180,7 @@ const updateProfilePicture = asyncHandler(async (req, res) => {
     throw new ApiError(400, "File is required");
   }
 
-  const avatar = await uploadOnCloudinary(profilePictureLocalPath);
+  const avatar = await uploadToS3(profilePictureLocalPath);
 
   if (!avatar?.url) {
     throw new ApiError(500, "Somthing went wrong while uploading avatar");

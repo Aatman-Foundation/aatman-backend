@@ -55,10 +55,7 @@ const NonMedicalProfessionalSchema = new Schema ({
         /* ========= Section 3: Academic & Professional Qualifications ========= */
         academicQualifications: {
           ug: {
-            qualification: {
-              type: String,
-              enum: ["BAMS", "BHMS", "BUMS", "BSMS", "BNYS"],
-            },
+            qualification: { type: String },
             college: { type: String },
             yearOfPassing: { type: Number, min: 1900, max: 2100 },
           },

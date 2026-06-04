@@ -3,17 +3,17 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { GalleryItem } from "../models/gallery.model.js";
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadToS3, deleteFromS3 } from "../utils/s3.js";
 
 const createGalleryItem = asyncHandler(async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, eventDate, venue } = req.body;
   const imagePath = req.file?.path;
 
   if (!title || !imagePath) {
     throw new ApiError(400, "Title and image are required");
   }
 
-  const uploadedImage = await uploadOnCloudinary(imagePath);
+  const uploadedImage = await uploadToS3(imagePath);
 
   if (!uploadedImage?.url || !uploadedImage?.public_id) {
     throw new ApiError(500, "Failed to upload image");
@@ -22,6 +22,8 @@ const createGalleryItem = asyncHandler(async (req, res) => {
   const galleryItem = await GalleryItem.create({
     title: title.trim(),
     description: description?.trim(),
+    eventDate: eventDate ? new Date(eventDate) : null,
+    venue: venue?.trim() || '',
     imageUrl: uploadedImage.url,
     imagePublicId: uploadedImage.public_id,
     createdBy: req.user._id,
@@ -57,7 +59,7 @@ const getGalleryItemById = asyncHandler(async (req, res) => {
 
 const updateGalleryItem = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, description } = req.body;
+  const { title, description, eventDate, venue } = req.body;
   const imagePath = req.file?.path;
 
   if (!mongoose.isValidObjectId(id)) {
@@ -78,15 +80,23 @@ const updateGalleryItem = asyncHandler(async (req, res) => {
     item.description = description.trim();
   }
 
+  if (eventDate !== undefined) {
+    item.eventDate = eventDate ? new Date(eventDate) : null;
+  }
+
+  if (typeof venue === 'string') {
+    item.venue = venue.trim();
+  }
+
   if (imagePath) {
-    const uploadedImage = await uploadOnCloudinary(imagePath);
+    const uploadedImage = await uploadToS3(imagePath);
 
     if (!uploadedImage?.url || !uploadedImage?.public_id) {
       throw new ApiError(500, "Failed to upload image");
     }
 
     if (item.imagePublicId) {
-      await deleteFromCloudinary(item.imagePublicId);
+      await deleteFromS3(item.imagePublicId);
     }
 
     item.imageUrl = uploadedImage.url;
@@ -112,7 +122,7 @@ const deleteGalleryItem = asyncHandler(async (req, res) => {
   }
 
   if (item.imagePublicId) {
-    await deleteFromCloudinary(item.imagePublicId);
+    await deleteFromS3(item.imagePublicId);
   }
 
   await item.deleteOne();

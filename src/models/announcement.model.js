@@ -25,6 +25,33 @@ const announcementSchema = new Schema(
       ref: "Admin",
       required: true,
     },
+    audience: {
+      type: String,
+      trim: true,
+      default: "All",
+    },
+    link: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    eventDate: {
+      type: Date,
+      default: null,
+    },
+    venue: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    imageUrl: {
+      type: String,
+      default: "",
+    },
+    imagePublicId: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true },
 );
