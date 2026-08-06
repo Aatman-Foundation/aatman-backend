@@ -29,12 +29,7 @@ router.route("/me").get(verifyJWT, requireRole(ROLES.USER),getUserProfileDetails
 router.route("/update-profile-picture").post(
   verifyJWT,
   requireRole(ROLES.USER),
-  upload.fields([
-    {
-      name: "personalPhoto",
-      maxCount: 1,
-    },
-  ]),
+  upload.fields([{ name: "profilePicture", maxCount: 1 }]),
   updateProfilePicture,
 );
 router.route("/update-details").post(verifyJWT, requireRole(ROLES.USER),updateAccountDetails)

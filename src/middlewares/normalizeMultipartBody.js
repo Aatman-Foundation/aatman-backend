@@ -165,6 +165,16 @@ export function normalizeMultipartBody(req, _res, next) {
       if (v && typeof v === "object") out.permanentAddress = v;
     }
 
+    // Generic pass: parse any remaining top-level field that is still a JSON string
+    for (const key of Object.keys(out)) {
+      if (typeof out[key] === "string") {
+        const s = out[key].trim();
+        if (s.startsWith("{") || s.startsWith("[")) {
+          try { out[key] = JSON.parse(s); } catch { /* leave as string */ }
+        }
+      }
+    }
+
     req.body = out;
     return next();
   } catch (err) {

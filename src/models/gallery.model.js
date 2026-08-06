@@ -19,6 +19,15 @@ const galleryItemSchema = new Schema(
       type: String,
       required: true,
     },
+    eventDate: {
+      type: Date,
+      default: null,
+    },
+    venue: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Admin",
