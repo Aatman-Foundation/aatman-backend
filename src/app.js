@@ -37,10 +37,10 @@ app.use(express.urlencoded({extended : true}));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-app.use("/api/v1/healthcheck", healthcheckRouter)
-app.use("/api/v1/admin", adminRouter )
-app.use("/api/v1/user", userRouter)
-app.use("/api/v1/public", publicRouter)
+app.use("/v1/healthcheck", healthcheckRouter)
+app.use("/v1/admin", adminRouter )
+app.use("/v1/user", userRouter)
+app.use("/v1/public", publicRouter)
 console.log(process.env.CORS_ORIGIN)
 app.use(errorHandler)
 
