@@ -1,10 +1,13 @@
 import mongoose,  { Mongoose } from "mongoose";
-import {DB_NAME} from "../utils/constants.js"
-
 
 const connectDB = async ()=> {
     try{
-        const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`);
+        // MONGODB_URI already includes the target database name and query
+        // params (e.g. ".../production?retryWrites=true&w=majority"), so it
+        // must be used as-is. Appending a separate DB_NAME here used to
+        // corrupt the write concern (it produced "w=majority/aatmanfoundation",
+        // an invalid write concern name).
+        const connectionInstance = await mongoose.connect(process.env.MONGODB_URI);
         console.log(`MongoDB connected!, DB host ${(connectionInstance).connection.host} `)
     }catch(error){
         console.log("Mongoose connection error", error)
