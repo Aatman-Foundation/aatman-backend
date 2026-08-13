@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { BlobServiceClient } from "@azure/storage-blob";
 import mongoose from "mongoose";
 import fs from "fs";
 import path from "path";
@@ -14,33 +14,27 @@ const IMAGES_DIR = path.resolve(
   "../aatman-frontend/public/gallary_img"
 );
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  process.env.AZURE_STORAGE_CONNECTION_STRING
+);
+const containerClient = blobServiceClient.getContainerClient(
+  process.env.AZURE_STORAGE_CONTAINER
+);
 
 const DB_NAME = "aatmanfoundation";
 
-async function uploadToS3(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
+async function uploadToAzureBlob(filePath) {
   const ext = path.extname(filePath);
-  const key = `gallery/${randomUUID()}${ext}`;
+  const blobName = `gallery/${randomUUID()}${ext}`;
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: key,
-      Body: fileBuffer,
-      ContentType: "image/jpeg",
-    })
-  );
+  await blockBlobClient.uploadFile(filePath, {
+    blobHTTPHeaders: { blobContentType: "image/jpeg" },
+  });
 
   return {
-    url: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
-    public_id: key,
+    url: blockBlobClient.url,
+    public_id: blobName,
   };
 }
 
@@ -97,7 +91,7 @@ async function run() {
     process.stdout.write(`Uploading [${uploaded + 1}/${files.length}] ${file} ... `);
 
     try {
-      const { url, public_id } = await uploadToS3(filePath);
+      const { url, public_id } = await uploadToAzureBlob(filePath);
       await GalleryItem.create({
         title,
         imageUrl: url,

@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadToS3 } from "../utils/s3.js";
+import { uploadToAzureBlob } from "../utils/azureBlob.js";
 import { generateAccessAndRefreshToken } from "../utils/tokenGenrator.js";
 import jwt from "jsonwebtoken";
 
@@ -180,7 +180,7 @@ const updateProfilePicture = asyncHandler(async (req, res) => {
     throw new ApiError(400, "File is required");
   }
 
-  const avatar = await uploadToS3(profilePictureLocalPath);
+  const avatar = await uploadToAzureBlob(profilePictureLocalPath);
 
   if (!avatar?.url) {
     throw new ApiError(500, "Somthing went wrong while uploading avatar");

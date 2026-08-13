@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { GalleryItem } from "../models/gallery.model.js";
-import { uploadToS3, deleteFromS3 } from "../utils/s3.js";
+import { uploadToAzureBlob, deleteFromAzureBlob } from "../utils/azureBlob.js";
 
 const createGalleryItem = asyncHandler(async (req, res) => {
   const { title, description, eventDate, venue } = req.body;
@@ -13,7 +13,7 @@ const createGalleryItem = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Title and image are required");
   }
 
-  const uploadedImage = await uploadToS3(imagePath);
+  const uploadedImage = await uploadToAzureBlob(imagePath);
 
   if (!uploadedImage?.url || !uploadedImage?.public_id) {
     throw new ApiError(500, "Failed to upload image");
@@ -89,14 +89,14 @@ const updateGalleryItem = asyncHandler(async (req, res) => {
   }
 
   if (imagePath) {
-    const uploadedImage = await uploadToS3(imagePath);
+    const uploadedImage = await uploadToAzureBlob(imagePath);
 
     if (!uploadedImage?.url || !uploadedImage?.public_id) {
       throw new ApiError(500, "Failed to upload image");
     }
 
     if (item.imagePublicId) {
-      await deleteFromS3(item.imagePublicId);
+      await deleteFromAzureBlob(item.imagePublicId);
     }
 
     item.imageUrl = uploadedImage.url;
@@ -122,7 +122,7 @@ const deleteGalleryItem = asyncHandler(async (req, res) => {
   }
 
   if (item.imagePublicId) {
-    await deleteFromS3(item.imagePublicId);
+    await deleteFromAzureBlob(item.imagePublicId);
   }
 
   await item.deleteOne();

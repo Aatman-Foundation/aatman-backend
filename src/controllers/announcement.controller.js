@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Announcement } from "../models/announcement.model.js";
-import { uploadToS3, deleteFromS3 } from "../utils/s3.js";
+import { uploadToAzureBlob, deleteFromAzureBlob } from "../utils/azureBlob.js";
 
 const createAnnouncement = asyncHandler(async (req, res) => {
   const { title, description, message, audience, link, eventDate, venue } = req.body;
@@ -16,7 +16,7 @@ const createAnnouncement = asyncHandler(async (req, res) => {
   let imageUrl = "";
   let imagePublicId = "";
   if (req.file?.path) {
-    const uploaded = await uploadToS3(req.file.path);
+    const uploaded = await uploadToAzureBlob(req.file.path);
     if (uploaded) {
       imageUrl = uploaded.url;
       imagePublicId = uploaded.public_id;
@@ -131,9 +131,9 @@ const updateAnnouncement = asyncHandler(async (req, res) => {
 
   if (req.file?.path) {
     if (announcement.imagePublicId) {
-      await deleteFromS3(announcement.imagePublicId);
+      await deleteFromAzureBlob(announcement.imagePublicId);
     }
-    const uploaded = await uploadToS3(req.file.path);
+    const uploaded = await uploadToAzureBlob(req.file.path);
     if (uploaded) {
       announcement.imageUrl = uploaded.url;
       announcement.imagePublicId = uploaded.public_id;
@@ -161,7 +161,7 @@ const deleteAnnouncement = asyncHandler(async (req, res) => {
   }
 
   if (deletedAnnouncement.imagePublicId) {
-    await deleteFromS3(deletedAnnouncement.imagePublicId);
+    await deleteFromAzureBlob(deletedAnnouncement.imagePublicId);
   }
 
   return res

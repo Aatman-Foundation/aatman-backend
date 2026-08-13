@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { uploadToS3 } from "../utils/s3.js";
+import { uploadToAzureBlob } from "../utils/azureBlob.js";
 import { Research } from "../models/research.model.js";
 
 const uploadResearch = asyncHandler(async (req, res) => {
@@ -18,7 +18,7 @@ const uploadResearch = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Only PDF uploads are allowed");
   }
 
-  const uploadedPdf = await uploadToS3(pdfPath);
+  const uploadedPdf = await uploadToAzureBlob(pdfPath);
 
   if (!uploadedPdf?.url || !uploadedPdf?.public_id) {
     throw new ApiError(500, "Failed to upload PDF");

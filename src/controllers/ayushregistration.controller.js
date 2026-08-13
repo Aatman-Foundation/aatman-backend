@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { MedicalProfessional } from "../models/medicalProfessional.model.js";
 import { NonMedicalProfessional } from "../models/nonMedicalProfessional.model.js";
 import { User } from "../models/user.model.js";
-import { uploadToS3 } from "../utils/s3.js";
+import { uploadToAzureBlob } from "../utils/azureBlob.js";
 
 const registerMedicalProfessional = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -27,7 +27,7 @@ const registerMedicalProfessional = asyncHandler(async (req, res) => {
     console.log("Photo error", error);
   }
 
-  const uploadedPhoto = await uploadToS3(personalPhotoPath);
+  const uploadedPhoto = await uploadToAzureBlob(personalPhotoPath);
 
 
   if (!uploadedPhoto?.url) {
@@ -83,7 +83,7 @@ const registerNonMedicalProfessional = asyncHandler(async (req, res) => {
     console.log("Photo error", error);
   }
 
-  const uploadedPhoto = await uploadToS3(personalPhotoPath);
+  const uploadedPhoto = await uploadToAzureBlob(personalPhotoPath);
 
   if (!uploadedPhoto?.url) {
     throw new ApiError(400, "Failed to upload personal photo");
